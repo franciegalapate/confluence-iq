@@ -1,9 +1,18 @@
 import { getUserWithRole } from "@/lib/supabase/roles";
+import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 import Analyzer from "@/components/analyzer";
 
 export default async function DashboardPage() {
   const { user, role } = await getUserWithRole();
+
+  const supabase = await createClient();
+  const { data: latest } = await supabase
+    .from("analyses")
+    .select("input_text, result, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   return (
     <main className="mx-auto max-w-2xl p-8">
@@ -20,7 +29,7 @@ export default async function DashboardPage() {
         </form>
       </div>
 
-      <Analyzer role={role ?? "sales_rep"} />
+      <Analyzer role={role ?? "sales_rep"} initial={latest ?? null} />
     </main>
   );
 }

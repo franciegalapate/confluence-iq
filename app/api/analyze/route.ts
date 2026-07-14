@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserWithRole } from "@/lib/supabase/roles";
+import { createClient } from "@/lib/supabase/server";
 
 const schema = {
   type: "object",
@@ -82,6 +83,15 @@ export async function POST(request: Request) {
 
     const data = await ollamaRes.json();
     const parsed = JSON.parse(data.message.content);
+
+    // Persist so Sales Reps (and later sessions) can view it
+    const supabase = await createClient();
+    await supabase.from("analyses").insert({
+      input_text: text,
+      result: parsed,
+      created_by: user.id,
+    });
+
     return NextResponse.json(parsed);
   } catch {
     return NextResponse.json(

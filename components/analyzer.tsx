@@ -12,15 +12,30 @@ type Result = {
   next_best_actions: { action: string; priority: "high" | "medium" | "low" }[];
 };
 
+type AnalysisRow = {
+  input_text: string;
+  result: Result;
+  created_at: string;
+};
+
 const priorityColor = {
   high: "bg-red-100 text-red-800",
   medium: "bg-amber-100 text-amber-800",
   low: "bg-gray-100 text-gray-700",
 };
 
-export default function Analyzer({ role }: { role: string }) {
+export default function Analyzer({
+  role,
+  initial,
+}: {
+  role: string;
+  initial: AnalysisRow | null;
+}) {
   const [text, setText] = useState("");
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<Result | null>(initial?.result ?? null);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(
+    initial?.created_at ?? null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +44,6 @@ export default function Analyzer({ role }: { role: string }) {
   async function analyze() {
     setLoading(true);
     setError(null);
-    setResult(null);
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -39,6 +53,7 @@ export default function Analyzer({ role }: { role: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Something went wrong");
       setResult(data);
+      setUpdatedAt(new Date().toISOString());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -66,7 +81,8 @@ export default function Analyzer({ role }: { role: string }) {
         </div>
       ) : (
         <p className="rounded border border-dashed p-4 text-gray-500">
-          You have view-only access. Ask a General Manager to run an analysis.
+          View-only access. Showing the latest intelligence from your General
+          Manager.
         </p>
       )}
 
@@ -79,8 +95,22 @@ export default function Analyzer({ role }: { role: string }) {
 
       {error && <p className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
 
+      {!result && !loading && (
+        <p className="text-gray-500">
+          {isManager
+            ? "Run an analysis to generate intelligence."
+            : "No analysis available yet. Check back once a manager has run one."}
+        </p>
+      )}
+
       {result && (
         <div className="space-y-6">
+          {updatedAt && (
+            <p className="text-xs text-gray-400">
+              Last updated {new Date(updatedAt).toLocaleString()}
+            </p>
+          )}
+
           <section>
             <h2 className="text-lg font-medium">Summary</h2>
             <p className="mt-1 text-gray-700">{result.summary}</p>

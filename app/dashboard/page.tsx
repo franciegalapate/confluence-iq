@@ -7,12 +7,11 @@ export default async function DashboardPage() {
   const { user, role } = await getUserWithRole();
 
   const supabase = await createClient();
-  const { data: latest } = await supabase
+  const { data: history } = await supabase
     .from("analyses")
-    .select("input_text, result, created_at")
+    .select("id, input_text, result, created_at")
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(10);
 
   return (
     <main className="mx-auto max-w-2xl p-8">
@@ -29,7 +28,7 @@ export default async function DashboardPage() {
         </form>
       </div>
 
-      <Analyzer role={role ?? "sales_rep"} initial={latest ?? null} />
+      <Analyzer role={role ?? "sales_rep"} history={history ?? []} />
     </main>
   );
 }

@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 
+type SalesBrief = {
+  talking_points: string[];
+  objections: { objection: string; response: string }[];
+  buyer_questions: string[];
+};
+
 type Result = {
   summary: string;
   content_gaps: {
@@ -10,6 +16,7 @@ type Result = {
     missing_content: string;
   }[];
   next_best_actions: { action: string; priority: "high" | "medium" | "low" }[];
+  sales_brief?: SalesBrief;
 };
 
 type AnalysisRow = {
@@ -81,8 +88,8 @@ export default function Analyzer({
         </div>
       ) : (
         <p className="rounded border border-dashed p-4 text-gray-500">
-          View-only access. Showing the latest intelligence from your General
-          Manager.
+          Sales brief — the latest guidance from your General Manager for buyer
+          conversations.
         </p>
       )}
 
@@ -99,7 +106,7 @@ export default function Analyzer({
         <p className="text-gray-500">
           {isManager
             ? "Run an analysis to generate intelligence."
-            : "No analysis available yet. Check back once a manager has run one."}
+            : "No sales brief available yet. Check back once a manager has run an analysis."}
         </p>
       )}
 
@@ -116,41 +123,88 @@ export default function Analyzer({
             <p className="mt-1 text-gray-700">{result.summary}</p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-medium">Content gaps</h2>
-            <ul className="mt-2 space-y-2">
-              {result.content_gaps.map((g, i) => (
-                <li key={i} className="rounded border p-3">
-                  <p className="font-medium">{g.topic}</p>
-                  <p className="text-sm text-gray-600">
-                    Buyers want: {g.customer_need}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Missing: {g.missing_content}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+          {isManager ? (
+            <>
+              <section>
+                <h2 className="text-lg font-medium">Content gaps</h2>
+                <ul className="mt-2 space-y-2">
+                  {result.content_gaps.map((g, i) => (
+                    <li key={i} className="rounded border p-3">
+                      <p className="font-medium">{g.topic}</p>
+                      <p className="text-sm text-gray-600">
+                        Buyers want: {g.customer_need}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Missing: {g.missing_content}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-lg font-medium">Next best actions</h2>
-            <ul className="mt-2 space-y-2">
-              {result.next_best_actions.map((a, i) => (
-                <li
-                  key={i}
-                  className="flex items-center justify-between rounded border p-3"
-                >
-                  <span>{a.action}</span>
-                  <span
-                    className={`rounded px-2 py-1 text-xs ${priorityColor[a.priority]}`}
-                  >
-                    {a.priority}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-lg font-medium">Next best actions</h2>
+                <ul className="mt-2 space-y-2">
+                  {result.next_best_actions.map((a, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center justify-between rounded border p-3"
+                    >
+                      <span>{a.action}</span>
+                      <span
+                        className={`rounded px-2 py-1 text-xs ${priorityColor[a.priority]}`}
+                      >
+                        {a.priority}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </>
+          ) : result.sales_brief ? (
+            <>
+              <section>
+                <h2 className="text-lg font-medium">Talking points</h2>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-gray-700">
+                  {result.sales_brief.talking_points.map((p, i) => (
+                    <li key={i}>{p}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-lg font-medium">
+                  Objections to prepare for
+                </h2>
+                <ul className="mt-2 space-y-2">
+                  {result.sales_brief.objections.map((o, i) => (
+                    <li key={i} className="rounded border p-3">
+                      <p className="font-medium">“{o.objection}”</p>
+                      <p className="text-sm text-gray-600">
+                        Suggested response: {o.response}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-lg font-medium">
+                  Questions buyers are asking
+                </h2>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-gray-700">
+                  {result.sales_brief.buyer_questions.map((q, i) => (
+                    <li key={i}>{q}</li>
+                  ))}
+                </ul>
+              </section>
+            </>
+          ) : (
+            <p className="text-gray-500">
+              This analysis predates the sales brief feature. Ask a manager to
+              run a new analysis to generate one.
+            </p>
+          )}
         </div>
       )}
     </div>

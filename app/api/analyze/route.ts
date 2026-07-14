@@ -29,8 +29,27 @@ const schema = {
         required: ["action", "priority"],
       },
     },
+    sales_brief: {
+      type: "object",
+      properties: {
+        talking_points: { type: "array", items: { type: "string" } },
+        objections: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              objection: { type: "string" },
+              response: { type: "string" },
+            },
+            required: ["objection", "response"],
+          },
+        },
+        buyer_questions: { type: "array", items: { type: "string" } },
+      },
+      required: ["talking_points", "objections", "buyer_questions"],
+    },
   },
-  required: ["summary", "content_gaps", "next_best_actions"],
+  required: ["summary", "content_gaps", "next_best_actions", "sales_brief"],
 };
 
 export async function POST(request: Request) {
@@ -65,9 +84,13 @@ export async function POST(request: Request) {
             role: "system",
             content:
               "You are a market intelligence analyst for a Ford car dealership. " +
-              "Analyze the provided text (customer feedback, reviews, competitor content) " +
-              "to find content gaps between what buyers want and what the dealership website offers. " +
-              "Base your findings only on the provided text. Return your answer as JSON.",
+              "Analyze the provided text (customer feedback, reviews, competitor content). " +
+              "For management: identify content gaps between what buyers want and what the " +
+              "dealership website offers, plus prioritized next actions to fix them. " +
+              "For the sales team: produce a practical sales brief with talking points reps " +
+              "can use on calls, likely customer objections each paired with a suggested " +
+              "response, and the specific questions buyers are asking. " +
+              "Base everything only on the provided text. Return your answer as JSON.",
           },
           { role: "user", content: text },
         ],
@@ -84,7 +107,6 @@ export async function POST(request: Request) {
     const data = await ollamaRes.json();
     const parsed = JSON.parse(data.message.content);
 
-    // Persist so Sales Reps (and later sessions) can view it
     const supabase = await createClient();
     await supabase.from("analyses").insert({
       input_text: text,

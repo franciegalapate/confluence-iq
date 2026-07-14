@@ -13,19 +13,36 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
+  const isManager = role === "general_manager";
+
   return (
-    <main className="mx-auto max-w-2xl p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-medium">Dashboard</h1>
-          <p className="text-sm text-gray-600">
-            {user?.email} ·{" "}
-            {role === "general_manager" ? "General Manager" : "Sales Rep"}
-          </p>
+    <main className="mx-auto max-w-6xl px-6 py-8">
+        <div className="animate-fade-in-up mb-8 flex flex-wrap items-center justify-between gap-4">        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-600">{user?.email}</p>
         </div>
-        <form action={signOut}>
-          <button className="rounded border px-4 py-2">Sign out</button>
-        </form>
+
+        <div className="flex items-center gap-3">
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 ${
+              isManager
+                ? "bg-indigo-100 text-indigo-700"
+                : "bg-blue-100 text-blue-700"
+            }`}
+          >
+            {isManager ? "General Manager" : "Sales Rep"}
+          </span>
+          {!isManager && (
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+              View Only Mode
+            </span>
+          )}
+          <form action={signOut}>
+            <button className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0">
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
 
       <Analyzer role={role ?? "sales_rep"} history={history ?? []} />
